@@ -1,4 +1,4 @@
-module BigNumber (BigNumber, scanner, output, somaBN, subBN) where
+module BigNumber (BigNumber, scanner, output, somaBN, subBN, mulBN) where
 import Data.Char ( intToDigit, digitToInt )
 
 -- TYPE DEFINITION
@@ -42,7 +42,7 @@ output bigNum
 -- AUXILIARY ABSOLUTENUM FUNCTIONS
 
 {-
-Two AbsoluteNums are normalizing by making their lists the same size and reverting them, to make calculations easier.
+Two AbsoluteNums are normalizing by making their lists the same size and reverting them, to make calculations easier
 -}
 normalize :: AbsoluteNum -> AbsoluteNum -> (AbsoluteNum, AbsoluteNum)
 normalize a b = (normalizedA, normalizedB)
@@ -60,6 +60,9 @@ getResult xs
         where num = dropWhile (==0) (reverse [fst tup | tup <- xs])
 
 
+{-
+Compares two AbsoluteNums and returns True if the first one is greater than the second
+-}
 isGreaterThan :: AbsoluteNum -> AbsoluteNum -> Bool
 isGreaterThan a b
                 | length a /= length b = length a > length b
@@ -74,8 +77,8 @@ isGreaterThan a b
 
 
 sumAbsolute :: AbsoluteNum -> AbsoluteNum -> AbsoluteNum
-sumAbsolute a b = getResult (sumCarries (zipWith sumWithCarry normalizedA normalizedB))
 -- The zip combines the modular sum of the digits with the corresponding carry
+sumAbsolute a b = getResult (sumCarries (zipWith sumWithCarry normalizedA normalizedB))
   where (normalizedA, normalizedB) = normalize a b
 
 
@@ -100,7 +103,7 @@ sumCarries xs = foldl sumCarry [] (xs ++ [(0, 0)])
 -- AUXILIARY SUB FUNCTIONS
 
 {-
-Subtracts a smaller AbsoluteNum (2nd argument) from a greater AbsoluteNUm (1st argument)
+Subtracts a smaller AbsoluteNum (2nd argument) from a greater AbsoluteNum (1st argument)
 -}
 subAbsolute :: AbsoluteNum -> AbsoluteNum -> AbsoluteNum
 subAbsolute a b = getResult (subCarries (zipWith subWithCarry normalizedA normalizedB))
@@ -126,6 +129,44 @@ subCarries = foldl subCarry []
           where (prevSub, prevCarry) = last acc
 
 
+
+
+-- AUXILIARY MUL FUNCTIONS
+
+{-
+Multiplies an AbsoluteNum by another one, by multiplying each of the latter's digits and then adding everything accordingly
+-}
+mulAbsolute :: AbsoluteNum -> AbsoluteNum -> AbsoluteNum
+-- The reverse allows us to reuse sumAbsolute
+mulAbsolute a b = foldl (\acc num -> sumAbsolute acc (reverse num)) [0] digitMuls
+  where normalizedA = reverse a
+        normalizedB = reverse b
+        digitMuls = mulAllDigits normalizedA normalizedB
+
+
+mulWithCarry :: Int -> Int -> (Int, Int)
+mulWithCarry x y = (total`mod`10, total`div`10)
+  where total = x * y
+
+{-
+Multiplies an AbsoluteNum by a given digit
+-}
+mulByDigit :: AbsoluteNum -> Int -> AbsoluteNum
+-- Reverse it again to continue making calculations afterwards
+mulByDigit num dig = reverse (getResult (sumCarries (map (`mulWithCarry` dig) num)))
+
+{-
+Multiplies the first number by all the digits in the second one and returns the results in a list of AbsoluteNums
+-}
+mulAllDigits :: AbsoluteNum -> AbsoluteNum -> [AbsoluteNum]
+-- The 0's at the start account for the position of the digit being multiplied
+mulAllDigits a b = [replicate i 0 ++ (rawMultiplications !! i) | i <- [0..end]]
+  where rawMultiplications = map (\x -> a `mulByDigit` x) b
+        end = length rawMultiplications - 1
+
+
+
+
 -- MAIN ARITHMETIC FUNCTIONS
 
 
@@ -144,7 +185,7 @@ somaBN a b
         isBGreater = isGreaterThan absoluteB absoluteA
 
 subBN :: BigNumber -> BigNumber -> BigNumber
-subBN a b 
+subBN a b
         | isANeg /= isBNeg = (isANeg, sumAbsolute absoluteA absoluteB)
         | isAGreater = (isANeg, subAbsolute absoluteA absoluteB)
         | isBGreater = (isBNeg, subAbsolute absoluteB absoluteA)
@@ -157,3 +198,12 @@ subBN a b
         isAGreater = isGreaterThan absoluteA absoluteB
         isBGreater = isGreaterThan absoluteB absoluteA
 
+
+mulBN :: BigNumber -> BigNumber -> BigNumber
+mulBN a b
+        | isANeg == isBNeg = (False, result)
+        | otherwise = (True, result)
+
+  where isANeg = fst a
+        isBNeg = fst b
+        result = mulAbsolute (snd a) (snd b)
