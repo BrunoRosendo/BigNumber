@@ -12,9 +12,18 @@ fibLista n = lista !! fromIntegral(n)
 
 fibListaInfinita :: (Integral a) => a -> a
 fibListaInfinita n = listainf !! fromIntegral(n)
-            where listainf = map fst (iterate(\(x,y) -> (y,x+y)) (0,1))
-			
---fibRecBN :: BigNumber -> BigNumber
---fibRecBN (False,[0]) = (False,[0])
---fibRecBN (False,[1]) = (False,[1])
---fibRecBN bign = somaBN fibRecBN(subBN(bign $ scanner "1")) fibRecBN(subBN(bign $ scanner "2"))
+                     where listainf = map fst (iterate(\(x,y) -> (y,x+y)) (0,1))                                                                                                                     
+
+
+fibRecBN :: BigNumber -> BigNumber
+fibRecBN (False,[0]) = (False,[0])
+fibRecBN (False,[1]) = (False,[1])
+fibRecBN bign = somaBN (fibRecBN(subBN bign (scanner "1"))) (fibRecBN(subBN bign (scanner "2")))
+
+fibListaBN :: BigNumber -> BigNumber
+fibListaBN bign = scanner(show(lista !! fromIntegral(read (output bign) :: Int)))
+                  where lista = 0 : 1 : map(\x -> lista !! (x - 1) + lista !! (x - 2)) [2..fromIntegral(read (output bign) :: Int)]
+
+fibListaInfinitaBN :: BigNumber -> BigNumber
+fibListaInfinitaBN bign = scanner(show(listainf !! fromIntegral(read (output bign) :: Int)))
+                          where listainf = map fst (iterate(\(x,y) -> (y,x+y)) (0,1))
