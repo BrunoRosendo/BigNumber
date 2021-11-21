@@ -1,4 +1,4 @@
-module BigNumber (BigNumber, scanner, output, somaBN, subBN, mulBN) where
+module BigNumber (BigNumber, scanner, output, somaBN, subBN, mulBN, divBN) where
 import Data.Char ( intToDigit, digitToInt )
 
 -- TYPE DEFINITION
@@ -166,6 +166,20 @@ mulAllDigits a b = [replicate i 0 ++ (rawMultiplications !! i) | i <- [0..end]]
 
 
 
+-- AUXILIARY DIV FUNCTIONS
+
+{-
+Divides two AbsoluteNums by recursively subtracting the denominator from the numerator and counting the quotient,
+until the denominator is greater than the numerator
+-}
+divAbsolute :: AbsoluteNum -> AbsoluteNum -> (AbsoluteNum, AbsoluteNum)
+divAbsolute num denom
+            | isDenomGreater = ([0], num)
+            | otherwise = (sumAbsolute [1] nextQ, nextR)
+  where isDenomGreater = isGreaterThan denom num
+        (nextQ, nextR) = divAbsolute (subAbsolute num denom) denom
+
+
 
 -- MAIN ARITHMETIC FUNCTIONS
 
@@ -207,3 +221,8 @@ mulBN a b
   where isANeg = fst a
         isBNeg = fst b
         result = mulAbsolute (snd a) (snd b)
+
+divBN :: BigNumber -> BigNumber -> (BigNumber, BigNumber)
+divBN a b = ((False, resultQ), (False, resultR))
+  where (resultQ, resultR) = divAbsolute (snd a) (snd b)
+
