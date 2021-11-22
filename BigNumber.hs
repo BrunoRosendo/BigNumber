@@ -1,4 +1,4 @@
-module BigNumber (BigNumber, scanner, output, somaBN, subBN, mulBN, divBN) where
+module BigNumber (BigNumber, scanner, output, somaBN, subBN, mulBN, divBN, safeDivBN) where
 import Data.Char ( intToDigit, digitToInt )
 
 -- TYPE DEFINITION
@@ -23,8 +23,12 @@ Converts a string into a BigNumber. A negative number is represented using a '-'
 -}
 scanner :: String -> BigNumber
 scanner numString
-              | head numString == '-' = (True, [digitToInt c | c <- tail numString])
-              | otherwise = (False, [digitToInt c | c <- numString])
+              | snd num == [0] = (False, [0]) -- A -0 is stored as a regular 0
+              | otherwise = num
+
+  where num = if head numString == '-'
+              then (True, trimZeros [digitToInt c | c <- tail numString])
+              else (False, trimZeros [digitToInt c | c <- numString])
 
 {-
 Converts a BigNumber into a string. A negative number is represented using a '-' at the start of the string
@@ -40,6 +44,15 @@ output bigNum
 
 
 -- AUXILIARY ABSOLUTENUM FUNCTIONS
+
+{-
+Removes trailing zeros from the integer list
+-}
+trimZeros :: AbsoluteNum -> AbsoluteNum
+trimZeros xs
+        | null num = [0]
+        | otherwise = num
+        where num = dropWhile (==0) xs
 
 {-
 Two AbsoluteNums are normalizing by making their lists the same size and reverting them, to make calculations easier
@@ -226,3 +239,8 @@ divBN :: BigNumber -> BigNumber -> (BigNumber, BigNumber)
 divBN a b = ((False, resultQ), (False, resultR))
   where (resultQ, resultR) = divAbsolute (snd a) (snd b)
 
+
+safeDivBN :: BigNumber -> BigNumber -> Maybe (BigNumber, BigNumber)
+safeDivBN a b
+        | b == scanner "0" = Nothing
+        | otherwise = Just (divBN a b)
