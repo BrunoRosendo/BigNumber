@@ -13,7 +13,7 @@ fibLista n = lista !! fromIntegral(n)
 
 fibListaInfinita :: (Integral a) => a -> a
 fibListaInfinita n = listainf !! fromIntegral(n)
-                     where listainf = map fst (iterate(\(x,y) -> (y,x+y)) (0,1))                                                                                                                     
+                     where listainf = map fst (iterate(\(x,y) -> (y,x+y)) (0,1))
 
 
 fibRecBN :: BigNumber -> BigNumber
@@ -28,12 +28,18 @@ nthBN [] _  = error "index too large"
 nthBN (x:_) (False,[0]) =  x
 nthBN (_:xs) bign = nthBN xs (subBN bign (scanner "1"))
 
+createList :: BigNumber  -> BigNumber  -> [BigNumber ]
+createList cur max
+        | isGreaterThan abs2 abs1 = cur :createList (somaBN cur (scanner "1")) max
+        | otherwise = [max]
+        where abs1 = snd cur
+              abs2 = snd max
 
---fibListaBN :: BigNumber -> BigNumber
---fibListaBN bign = nthBN listabn bign
-                  --where listabn = (False,[0]) : (False,[1])  : map(\x -> nthBN listabn (subBN x (scanner "1")) + nthBN listabn (subBN x (scanner "1")) [2..fromIntegral(read (output bign) :: Int)]
+fibListaBN :: BigNumber -> BigNumber
+fibListaBN bign = nthBN lista bign
+                        where aux = createList (scanner "2") bign
+                              lista = scanner "0" : scanner "1" : map(\x -> somaBN (nthBN lista (subBN x (scanner "1"))) (nthBN lista (subBN x (scanner "2")))) aux
 
-        
 
 fibListaInfinitaBN :: BigNumber -> BigNumber
 fibListaInfinitaBN bign = nthBN listainfbn bign
