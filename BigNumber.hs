@@ -212,7 +212,7 @@ divAux num1 num2 denom quotient
             | otherwise = divAux (rest ++ [head num2]) (tail num2) denom (quotient ++ newQuot)
 
   where (newQuot, newRest) = divWithSubtraction num1 denom
-        rest = dropWhile (== 0) newRest -- drop all of the trailing zeros
+        rest = dropWhile (== 0) newRest -- drop all of trailing zeros
 
 {-
 Divides two AbsoluteNum's, by calling divAux after dividing the numerator accordingly
