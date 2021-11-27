@@ -185,12 +185,45 @@ mulAllDigits a b = [replicate i 0 ++ (rawMultiplications !! i) | i <- [0..end]]
 Divides two AbsoluteNums by recursively subtracting the denominator from the numerator and counting the quotient,
 until the denominator is greater than the numerator
 -}
-divAbsolute :: AbsoluteNum -> AbsoluteNum -> (AbsoluteNum, AbsoluteNum)
-divAbsolute num denom
+divWithSubtraction :: AbsoluteNum -> AbsoluteNum -> (AbsoluteNum, AbsoluteNum)
+divWithSubtraction num denom
             | isDenomGreater = ([0], num)
             | otherwise = (sumAbsolute [1] nextQ, nextR)
   where isDenomGreater = isGreaterThan denom num
-        (nextQ, nextR) = divAbsolute (subAbsolute num denom) denom
+        (nextQ, nextR) = divWithSubtraction (subAbsolute num denom) denom
+
+{-
+Splits the numerator until the first part is greater than the denominator
+-}
+splitNumerator :: AbsoluteNum -> AbsoluteNum -> AbsoluteNum -> (AbsoluteNum, AbsoluteNum)
+splitNumerator denom divPart rest
+            | not isDenomGreater = (divPart, rest)
+            | otherwise = splitNumerator denom (divPart ++ [head rest]) (tail rest)
+
+  where isDenomGreater = isGreaterThan denom divPart
+
+{-
+Takes the split numerator and starts calculating the result by dividing num1 by denom, keeping the rest
+and recursively adding one digit to num1 and to the quotient
+-}
+divAux :: AbsoluteNum -> AbsoluteNum -> AbsoluteNum -> AbsoluteNum -> (AbsoluteNum, AbsoluteNum)
+divAux num1 num2 denom quotient
+            | null num2 = (quotient ++ newQuot, newRest) -- last call. Here, we want to keep a [0] rest
+            | otherwise = divAux (rest ++ [head num2]) (tail num2) denom (quotient ++ newQuot)
+
+  where (newQuot, newRest) = divWithSubtraction num1 denom
+        rest = dropWhile (== 0) newRest -- drop all of the trailing zeros
+
+{-
+Divides two AbsoluteNum's, by calling divAux after dividing the numerator accordingly
+-}
+divAbsolute :: AbsoluteNum -> AbsoluteNum -> (AbsoluteNum, AbsoluteNum)
+divAbsolute num denom
+            | isDenomGreater = ([0], num)
+            | otherwise = divAux divPart finalPart denom [] -- Start the recursive function
+
+  where isDenomGreater = isGreaterThan denom num
+        (divPart, finalPart) = splitNumerator denom [] num
 
 
 
